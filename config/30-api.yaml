@@ -1,0 +1,93 @@
+apiVersion: v1
+kind: Service
+metadata:
+  name: vinyl-spins-api
+  namespace: vinyl-spins
+spec:
+  selector:
+    app: vinyl-spins-api
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vinyl-spins-api
+  namespace: vinyl-spins
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: vinyl-spins-api
+  template:
+    metadata:
+      labels:
+        app: vinyl-spins-api
+    spec:
+      initContainers:
+        - name: migrate
+          # Use the same image as the API; it includes the `migrate` binary.
+          image: YOUR_REGISTRY/vinyl-spins-api:latest
+          imagePullPolicy: IfNotPresent
+          command: ["migrate", "up"]
+          env:
+            - name: DATABASE_URL
+              value: postgres://discogs:discogs@vinyl-spins-postgres:5432/discogs_listen_tracker?sslmode=disable
+            - name: APP_ENC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: vinyl-spins-secrets
+                  key: APP_ENC_KEY
+      containers:
+        - name: api
+          image: YOUR_REGISTRY/vinyl-spins-api:latest
+          imagePullPolicy: IfNotPresent
+          ports:
+            - containerPort: 8080
+              name: http
+          env:
+            - name: PORT
+              value: "8080"
+            - name: DATABASE_URL
+              value: postgres://discogs:discogs@vinyl-spins-postgres:5432/discogs_listen_tracker?sslmode=disable
+            - name: APP_ENC_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: vinyl-spins-secrets
+                  key: APP_ENC_KEY
+            - name: DISCOGS_CONSUMER_KEY
+              valueFrom:
+                secretKeyRef:
+                  name: vinyl-spins-secrets
+                  key: DISCOGS_CONSUMER_KEY
+            - name: DISCOGS_CONSUMER_SECRET
+              valueFrom:
+                secretKeyRef:
+                  name: vinyl-spins-secrets
+                  key: DISCOGS_CONSUMER_SECRET
+            - name: DISCOGS_OAUTH_CALLBACK_URL
+              valueFrom:
+                secretKeyRef:
+                  name: vinyl-spins-secrets
+                  key: DISCOGS_OAUTH_CALLBACK_URL
+            - name: DISCOGS_USER_AGENT
+              valueFrom:
+                secretKeyRef:
+                  name: vinyl-spins-secrets
+                  key: DISCOGS_USER_AGENT
+          readinessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 2
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /healthz
+              port: http
+            initialDelaySeconds: 10
+            periodSeconds: 10
+

@@ -1,0 +1,67 @@
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: vinyl-spins
+  namespace: vinyl-spins
+  annotations:
+    # Mirror the pattern from https://github.com/stmcallister/alpaca-trader-config
+    # This attaches the NgrokTrafficPolicy defined below.
+    k8s.ngrok.com/traffic-policy: google-oauth
+spec:
+  ingressClassName: ngrok
+  rules:
+    - host: APP_URL
+      http:
+        paths:
+          # API + auth routes
+          - path: /api
+            pathType: Prefix
+            backend:
+              service:
+                name: vinyl-spins-api
+                port:
+                  name: http
+          - path: /auth
+            pathType: Prefix
+            backend:
+              service:
+                name: vinyl-spins-api
+                port:
+                  name: http
+          - path: /healthz
+            pathType: Prefix
+            backend:
+              service:
+                name: vinyl-spins-api
+                port:
+          name: http
+          # UI
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: vinyl-spins-ui
+                port:
+                  name: http
+
+---
+apiVersion: ngrok.k8s.ngrok.com/v1alpha1
+kind: NgrokTrafficPolicy
+metadata:
+  name: google-oauth
+  namespace: vinyl-spins
+spec:
+  policy:
+    on_http_request:
+      - actions: # Phase 1 : Authenticate
+          - type: oauth
+            config:
+              provider: google
+      - expressions: # Phase 2 : Deny if not in allowlist
+          - "!(actions.ngrok.oauth.identity.email in ['ALLOW_EMAIL'])"
+        actions:
+          - type: custom-response
+            config:
+              status_code: 403
+              content: "Forbidden"
+
