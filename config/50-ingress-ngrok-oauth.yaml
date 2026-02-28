@@ -4,16 +4,13 @@ metadata:
   name: vinyl-spins
   namespace: vinyl-spins
   annotations:
-    # Mirror the pattern from https://github.com/stmcallister/alpaca-trader-config
-    # This attaches the NgrokTrafficPolicy defined below.
     k8s.ngrok.com/traffic-policy: google-oauth
 spec:
   ingressClassName: ngrok
   rules:
-    - host: APP_URL
+    - host: vinyl-spins.ngrok.io
       http:
         paths:
-          # API + auth routes
           - path: /api
             pathType: Prefix
             backend:
@@ -34,8 +31,7 @@ spec:
               service:
                 name: vinyl-spins-api
                 port:
-          name: http
-          # UI
+                  name: http
           - path: /
             pathType: Prefix
             backend:
@@ -53,15 +49,14 @@ metadata:
 spec:
   policy:
     on_http_request:
-      - actions: # Phase 1 : Authenticate
+      - actions:
           - type: oauth
             config:
               provider: google
-      - expressions: # Phase 2 : Deny if not in allowlist
-          - "!(actions.ngrok.oauth.identity.email in ['ALLOW_EMAIL'])"
+      - expressions:
+          - "!(actions.ngrok.oauth.identity.email in ['stmcallister@gmail.com'])"
         actions:
           - type: custom-response
             config:
               status_code: 403
-              content: "Forbidden"
-
+              content: Forbidden
