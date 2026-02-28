@@ -30,7 +30,7 @@ spec:
       containers:
         - name: ui
           # Build/push this image from `frontend/Dockerfile.prod`.
-          image: DOCKER_URL/vinyl-spins-ui:IMG_TAG
+          image: DOCKER_URL/vst-ui:IMG_TAG
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
