@@ -30,7 +30,7 @@ spec:
       initContainers:
         - name: migrate
           # Use the same image as the API; it includes the `migrate` binary.
-          image: DOCKER_URL/vst-api:IMAGE_LABEL
+          image: stmcallisterbridge4/vst-api:926f00a5ddaf0c679290a38510cb53a23e437b06
           imagePullPolicy: IfNotPresent
           command: ["migrate", "up"]
           env:
@@ -43,7 +43,7 @@ spec:
                   key: APP_ENC_KEY
       containers:
         - name: api
-          image: DOCKER_URL/vst-api:IMAGE_LABEL
+          image: stmcallisterbridge4/vst-api:926f00a5ddaf0c679290a38510cb53a23e437b06
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 8080
