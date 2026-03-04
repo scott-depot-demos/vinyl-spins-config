@@ -30,7 +30,7 @@ spec:
       containers:
         - name: ui
           # Build/push this image from `frontend/Dockerfile.prod`.
-          image: DOCKER_URL/vst-ui:IMAGE_LABEL
+          image: stmcallisterbridge4/vst-ui:2f41efdb6dfdf589588694b80a0acbb1104e8f3a
           imagePullPolicy: IfNotPresent
           ports:
             - containerPort: 80
